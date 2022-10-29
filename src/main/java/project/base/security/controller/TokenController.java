@@ -42,7 +42,7 @@ public class TokenController {
                 DecodedJWT decodedJWT = verifier.verify(refresh_token);
                 String username = decodedJWT.getSubject();
 
-                UserDTO user = usuarioService.getUser(username);
+                UserDTO user = usuarioService.getUserByEmail(username);
 
                 if (user == null){
                     response.setHeader("error", "Usuario no encontrado");

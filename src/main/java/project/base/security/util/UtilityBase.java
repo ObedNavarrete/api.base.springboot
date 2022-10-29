@@ -18,7 +18,7 @@ public class UtilityBase {
     // creadoPor
     public Integer createdBy() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Integer id = usersRepository.findById(authentication.getName());
+        Integer id = usersRepository.findIdLogued(authentication.getName());
         return id;
     }
 
@@ -39,7 +39,7 @@ public class UtilityBase {
     // modificadoPor
     public Integer modifiedBy() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Integer id = usersRepository.findById(authentication.getName());
+        Integer id = usersRepository.findIdLogued(authentication.getName());
         return id;
     }
 

@@ -55,7 +55,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 
         String access_token = com.auth0.jwt.JWT.create()
                 .withSubject(user.getUsername())
-                .withExpiresAt(new java.util.Date(System.currentTimeMillis() + 10 * 60 * 1000)) // 10 minutes
+                .withExpiresAt(new java.util.Date(System.currentTimeMillis() + 20160 * 60 * 1000)) // 10 minutes
                 .withIssuer(request.getRequestURL().toString())
                 .withClaim("roles", user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()))
                 .sign(algorithm);
@@ -75,5 +75,14 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 
         response.setContentType("application/json");
         new com.fasterxml.jackson.databind.ObjectMapper().writeValue(response.getOutputStream(), tokens);
+    }
+
+    @Override
+    protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException, ServletException {
+        Map<String, String> errors = new HashMap<>();
+        errors.put("message", failed.getMessage());
+        response.setContentType("application/json");
+        response.setStatus(401);
+        new com.fasterxml.jackson.databind.ObjectMapper().writeValue(response.getOutputStream(), errors);
     }
 }
