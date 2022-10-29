@@ -6,13 +6,18 @@ import org.hibernate.annotations.UpdateTimestamp;
 import project.base.security.util.EntityBase;
 
 import javax.persistence.*;
+import javax.validation.Constraint;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 
 @Entity
-@Table(name = "users")
+@Table(
+        name = "users", uniqueConstraints = {
+        @UniqueConstraint(columnNames = "email"),
+        @UniqueConstraint(columnNames = "phone")
+})
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

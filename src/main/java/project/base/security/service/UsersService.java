@@ -8,11 +8,35 @@ import project.base.security.entity.Role;
 public interface UsersService {
     ResponseDTO save(UsersWithPassDTO user);
 
+    ResponseDTO saveSuperAdmin(UsersWithPassDTO user);
+
+    ResponseDTO saveAdmin(UsersWithPassDTO user);
+
+    ResponseDTO saveCustomer(UsersWithPassDTO user);
+
+    ResponseDTO saveSubCustomer(UsersWithPassDTO user);
+
+    ResponseDTO getUserById(Integer id);
+
+    UserDTO getUserByEmail(String email);
+
+    UserDTO getUserByPhone(String phone);
+
+    ResponseDTO getAllUsers(int page, int size);
+
+    ResponseDTO updateUser(Integer id, UserDTO user);
+
+    ResponseDTO deleteUser(Integer id);
+
+    /**
+     * By: Obed Navarrete
+     * Date: 29/10/2022
+     * This methods is used for the role save and assign to the user
+     * @param role to be saved
+     * @return the persisted entity of the role saved
+     */
+
     ResponseDTO saveRole(Role role);
 
     void addRoleToUser(String email, String roleName);
-
-    UserDTO getUser(String email);
-
-    ResponseDTO getUsers(int page, int size);
 }

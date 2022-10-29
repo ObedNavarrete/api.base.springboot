@@ -1,8 +1,12 @@
 package project.base.security.exception;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -12,10 +16,12 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import project.base.security.dto.ResponseDTO;
 
+import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-@ControllerAdvice
+@ControllerAdvice @Slf4j
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseDTO handleException(Exception e) {
@@ -185,7 +191,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             HttpStatus status, WebRequest request) {
 
         String comentario = ex.getBindingResult().getFieldErrors().stream()
-                .map(x -> "columna '" + x.getField() + "' => " + x.getDefaultMessage().toLowerCase(Locale.ROOT))
+                .map(x -> "FATAL ERROR: Column '" + x.getField() + "' => " + x.getDefaultMessage().toLowerCase(Locale.ROOT))
                 .collect(Collectors.joining(", "));
 
         ResponseDTO responseDTO = new ResponseDTO();
@@ -208,7 +214,40 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ResponseDTO apiError = new ResponseDTO();
         apiError.setStatus("400");
         apiError.setMessage("error");
-        apiError.setComment("El método " + ex.getMethod() + " no es soportado para esta petición... Métodos soportados => " + ex.getSupportedHttpMethods());
+        apiError.setComment("The method " + ex.getMethod() + " is not supported ... Use method => " + ex.getSupportedHttpMethods());
         return ResponseEntity.ok(apiError);
+    }
+
+    // AccessDeniedException
+    @ExceptionHandler(AccessDeniedException.class)
+    public final ResponseEntity<Map<String, Object>> handleAccessDeniedException(Exception ex, WebRequest request) {
+        //code here
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("status", 403);
+        body.put("message", ex.getMessage());
+        body.put("comment", "Unauthorized");
+        return new ResponseEntity<>(body, HttpStatus.OK);
+    }
+
+    // UsernameNotFoundException
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public final ResponseEntity<Map<String, Object>> handleUsernameNotFoundException(Exception ex, WebRequest request) {
+        log.error("UsernameNotFoundException: " + ex.getMessage());
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("status", 404);
+        body.put("message", "error");
+        body.put("comment", "User not found");
+        return new ResponseEntity<>(body, HttpStatus.OK);
+    }
+
+    // DataIntegrityViolationException
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public final ResponseEntity<Map<String, Object>> handleDataIntegrityViolationException(Exception ex, WebRequest request) {
+        log.error("DataIntegrityViolationException: " + ex.getMessage());
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("status", 400);
+        body.put("message", "error");
+        body.put("comment", "Data integrity violation, check the data");
+        return new ResponseEntity<>(body, HttpStatus.OK);
     }
 }
