@@ -1,0 +1,45 @@
+Basic Query for Security and Relation of the users table and role table
+
+create table role
+(
+    id     serial not null primary key,
+    name   varchar(60),
+    pasive boolean
+);
+
+create table users
+(
+    id             serial not null primary key,
+    first_name     varchar(60),
+    last_name      varchar(60),
+    email          varchar(80)
+        constraint uk6dotkott2kjsp8vw4d0m25fb7
+            unique,
+    password       varchar(60),
+    phone          varchar(10)
+        constraint ukdu5v5sr43g5bfnji4vb8hg5s3
+            unique,
+    enabled        boolean,
+    created_at     timestamp,
+    created_by     integer,
+    created_by_ip  varchar(50),
+    modified_at    timestamp,
+    modified_by    integer,
+    modified_by_ip varchar(50),
+    pasive         boolean
+);
+
+create table users_role
+(
+    users_id integer not null
+        constraint fkiu0xsee0dmwa28nffgyf4bcvc
+            references users
+        constraint users_role_user_id_fkey
+            references users,
+    role_id  integer not null
+        constraint fk3qjq7qsiigxa82jgk0i0wuq3g
+            references role
+        references role,
+    constraint userid_roleid_unique
+        unique (users_id, role_id)
+);

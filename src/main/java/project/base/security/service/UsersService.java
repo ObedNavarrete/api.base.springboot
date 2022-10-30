@@ -5,6 +5,8 @@ import project.base.security.dto.UserDTO;
 import project.base.security.dto.UsersWithPassDTO;
 import project.base.security.entity.Role;
 
+import java.util.Map;
+
 public interface UsersService {
     ResponseDTO save(UsersWithPassDTO user);
 
@@ -38,5 +40,7 @@ public interface UsersService {
 
     ResponseDTO saveRole(Role role);
 
-    void addRoleToUser(String email, String roleName);
+    Map<String, String> addRoleToUser(String email, String roleName);
+
+    Map<String, String> deleteRoleFromUser(String email, String roleName);
 }

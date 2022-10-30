@@ -25,9 +25,7 @@ import project.base.security.repository.UsersRepository;
 import project.base.security.service.UsersService;
 import project.base.security.util.UtilityBase;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,7 +43,7 @@ public class UsersServiceImpl extends UtilityBase implements UsersService, UserD
      * Date: 29/10/2022
      * This method is used for the authentication of the user
      * @param email or phone of the user to be authenticated
-     * @return the persisted entity of the user authenticated
+     * @return the persisted entity of the user authenticated or null if the user is not found
      */
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -109,12 +107,13 @@ public class UsersServiceImpl extends UtilityBase implements UsersService, UserD
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             Users usersEntity = usersMapper.withPassToEtity(user);
             usersEntity.setEnabled(true);
+            usersEntity.setCreatedBy(this.createdBy());
             usersEntity.setCreatedAt(new Date());
             usersEntity.setCreatedByIp(this.createdByIp());
             Users nu = usersRepository.save(usersEntity);
             nu.getRoles().add(roleRepository.findByName("ROLE_SUPER_ADMIN"));
 
-            response.setStatus("200");
+            response.setStatus("201");
             response.setMessage("success");
             response.setComment("User saved successfully");
             response.setData(usersMapper.toDTO(usersEntity));
@@ -141,12 +140,13 @@ public class UsersServiceImpl extends UtilityBase implements UsersService, UserD
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             Users usersEntity = usersMapper.withPassToEtity(user);
             usersEntity.setEnabled(true);
+            usersEntity.setCreatedBy(this.createdBy());
             usersEntity.setCreatedAt(new Date());
             usersEntity.setCreatedByIp(this.createdByIp());
             Users nu = usersRepository.save(usersEntity);
             nu.getRoles().add(roleRepository.findByName("ROLE_ADMIN"));
 
-            response.setStatus("200");
+            response.setStatus("201");
             response.setMessage("success");
             response.setComment("User saved successfully");
             response.setData(usersMapper.toDTO(usersEntity));
@@ -180,7 +180,7 @@ public class UsersServiceImpl extends UtilityBase implements UsersService, UserD
             Users nu = usersRepository.save(usersEntity);
             nu.getRoles().add(roleRepository.findByName("ROLE_CUSTOMER"));
 
-            response.setStatus("200");
+            response.setStatus("201");
             response.setMessage("success");
             response.setComment("User saved successfully");
             response.setData(usersMapper.toDTO(usersEntity));
@@ -207,12 +207,13 @@ public class UsersServiceImpl extends UtilityBase implements UsersService, UserD
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             Users usersEntity = usersMapper.withPassToEtity(user);
             usersEntity.setEnabled(true);
+            usersEntity.setCreatedBy(this.createdBy());
             usersEntity.setCreatedAt(new Date());
             usersEntity.setCreatedByIp(this.createdByIp());
             Users nu = usersRepository.save(usersEntity);
             nu.getRoles().add(roleRepository.findByName("ROLE_SUB_CUSTOMER"));
 
-            response.setStatus("200");
+            response.setStatus("201");
             response.setMessage("success");
             response.setComment("User saved successfully");
             response.setData(usersMapper.toDTO(usersEntity));
@@ -332,9 +333,9 @@ public class UsersServiceImpl extends UtilityBase implements UsersService, UserD
         log.info("delete user by id {} ", id);
         ResponseDTO response = new ResponseDTO();
 
-        Users usersEntity = usersRepository.findById(id).orElse(null);
+        Users usersEntity = usersRepository.findByPasiveIsFalseAndId(id);
         if (usersEntity == null) {
-            log.error("User not found in the database");
+            log.error("User not found in the database or already deleted");
             return new ResponseDTO("404", "error", "User not found", null);
         }
 
@@ -390,12 +391,73 @@ public class UsersServiceImpl extends UtilityBase implements UsersService, UserD
     }
 
     @Override
-    public void addRoleToUser(String email, String roleName) {
+    public Map<String, String> addRoleToUser(String email, String roleName) {
         log.info("add role {} to user {} ", roleName, email);
+        Map<String, String> response = new HashMap<>();
 
         Users users = usersRepository.findByEmail(email);
         Role role = roleRepository.findByName(roleName);
 
-        users.getRoles().add(role);
+        if (users == null || role == null) {
+            log.error("User not found in the database");
+            response.put("status", "404");
+            response.put("message", "error");
+            response.put("comment", "User or role not found");
+            return response;
+        }
+
+        if (users.getRoles().contains(role)) {
+            log.error("User already has this role");
+            response.put("status", "400");
+            response.put("message", "error");
+            response.put("comment", "User already has this role");
+            return response;
+        }
+
+        try {
+            users.getRoles().add(role);
+            usersRepository.save(users);
+            response.put("status", "200");
+            response.put("message", "success");
+            response.put("comment", "Role added to user successfully");
+            return response;
+        } catch (Exception e) {
+            response.put("status", "500");
+            response.put("message", "error");
+            response.put("comment", "Role add to user failed, comment: " + e.getMessage());
+            return response;
+        }
+    }
+
+    @Override
+    public Map<String, String> deleteRoleFromUser(String email, String roleName) {
+        log.info("delete role {} from user {} ", roleName, email);
+        Map<String, String> response = new HashMap<>();
+
+        Users users = usersRepository.findByEmail(email);
+        Role role = roleRepository.findByName(roleName);
+
+        if (users == null || role == null) {
+            log.error("User or role not found in the database");
+            response.put("status", "404");
+            response.put("message", "error");
+            response.put("comment", "User or role not found");
+            return response;
+        }
+
+        if (users.getRoles().contains(role)) {
+            log.info("Deleting role {} from user {}", roleName, email);
+            users.getRoles().remove(role);
+            response.put("status", "200");
+            response.put("message", "success");
+            response.put("comment", "Role deleted successfully");
+            return response;
+        } else {
+            log.error("User does not have the role");
+            response.put("status", "404");
+            response.put("message", "error");
+            response.put("comment", "User does not have the role");
+            return response;
+        }
     }
 }
