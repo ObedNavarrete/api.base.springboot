@@ -65,6 +65,7 @@ public class UsersController {
         return ResponseEntity.created(uri).body(usersService.saveAdmin(user));
     }
 
+    @PreAuthorize("hasRole('ROLE_CUSTOMER')")
     @PostMapping("/users/saveSubCustomer")
     public ResponseEntity<?> saveSubCustomer(@Valid @RequestBody UsersWithPassDTO user) {
         URI uri = URI.create(ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/users/saveSubCustomer").toUriString());
@@ -94,8 +95,13 @@ public class UsersController {
 
     @PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN')")
     @PostMapping("/role/addToUser")
-    public ResponseEntity<?> addRoleToUser(@RequestBody RoleUserDTO form) {
-        usersService.addRoleToUser(form.getEmail(), form.getRolName());
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> addRoleToUser(@Valid @RequestBody RoleUserDTO form) {
+        return ResponseEntity.ok().body(usersService.addRoleToUser(form.getEmail(), form.getRolName()));
+    }
+
+    @PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN')")
+    @DeleteMapping("/role/deleteFromUser")
+    public ResponseEntity<?> deleteRoleFromUser(@Valid @RequestBody RoleUserDTO form) {
+        return ResponseEntity.ok().body(usersService.deleteRoleFromUser(form.getEmail(), form.getRolName()));
     }
 }

@@ -22,4 +22,6 @@ public interface UsersRepository extends JpaRepository<Users, Integer> {
     Integer findIdLogued(String email);
 
     Users findByPasiveIsFalseAndEnabledIsTrueAndPhone(String phone);
+
+    Users findByPasiveIsFalseAndId(Integer id);
 }

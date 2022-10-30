@@ -10,10 +10,8 @@ import java.util.Calendar;
 import java.util.Date;
 
 public class UtilityBase {
-    @Autowired
-    HttpServletRequest request;
-    @Autowired
-    UsersRepository usersRepository;
+    @Autowired HttpServletRequest request;
+    @Autowired UsersRepository usersRepository;
 
     // creadoPor
     public Integer createdBy() {
